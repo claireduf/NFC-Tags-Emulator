@@ -8,6 +8,10 @@ import android.os.Bundle
 import android.os.Vibrator
 import android.support.v7.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import android.net.wifi.WifiConfiguration
+import android.net.wifi.WifiManager
+
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -20,15 +24,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         vibratorService = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
-        val ndef = makeNdef()
+        val wifi = WifiNetwork("Zen-Alien", AuthType.WPA2_PSK, "Alienwantswifi")
+        val ndef = NfcUtils.generateNdefMessage(wifi)
         nfcAdapter.setNdefPushMessage(ndef, this)
+        listWifis()
     }
 
-    private fun makeNdef(): NdefMessage {
-        return NfcUtils.generateNdefMessage(
-            WifiNetwork("Zen-Alien", AuthType.WPA2_PSK, "Alienwantswifi"))
+    private fun listWifis() {
+        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val list = wifiManager.configuredNetworks
+        content.text = list.joinToString("\n") { it.SSID }
     }
-
 
     override fun onResume() {
         super.onResume()
