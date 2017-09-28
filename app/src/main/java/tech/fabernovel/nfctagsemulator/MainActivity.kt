@@ -2,16 +2,18 @@ package tech.fabernovel.nfctagsemulator
 
 import android.content.Context
 import android.content.Intent
+import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.nfc.tech.MifareClassic
+import android.nfc.tech.NdefFormatable
+import android.nfc.tech.NfcA
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.support.v7.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
-import kotlin.experimental.and
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,10 +39,33 @@ class MainActivity : AppCompatActivity() {
 
         vibrate()
 
-        val tagFromIntent = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+        val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
         val tagId = intent.getByteArrayExtra(NfcAdapter.EXTRA_ID)
+        val ndefMessages = intent.getParcelableArrayListExtra<NdefMessage>(NfcAdapter.EXTRA_NDEF_MESSAGES)
 
-        content.text = tagFromIntent.toString() + "\n" + tagId.toHex()
+        val ndef = NdefFormatable.get(tag)
+        val nfca = NfcA.get(tag)
+        val mfc = MifareClassic.get(tag)
+
+        val atqa = nfca.atqa
+        val sak = nfca.sak
+
+        val sectorCount = mfc.sectorCount
+        val blockCount = mfc.blockCount
+        val size = mfc.size
+        val type = mfc.type
+
+        content.text =
+            """$tag
+               |ID: ${tagId.toHex()}
+               |NDEF: $ndefMessages
+               |atqa: ${atqa.toHex()}
+               |sak: $sak
+               |sectorCount: $sectorCount
+               |blockCount: $blockCount
+               |size: $size
+               |type: $type
+               |""".trimMargin()
     }
 
     private fun vibrate() {
