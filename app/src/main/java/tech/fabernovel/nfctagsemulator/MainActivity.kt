@@ -39,49 +39,9 @@ class MainActivity : AppCompatActivity() {
         val stored = emptyList<WifiNetwork>()
         val (known, reachable, connected) = listWifis()
 
-        val knownWithPassword = known.map { kElement ->
-            val element = stored.find { sElement ->
-                kElement.ssid == sElement.ssid
-            }
-
-            WifiModel(element ?: kElement, element != null && element.key != null, Status.UNREACHABLE)
-        }
-
-        val reachableWithPassword = reachable.map { rElement ->
-            val element = stored.find { sElement ->
-                rElement.ssid == sElement.ssid
-            }
-
-            WifiModel(element ?: rElement, element != null && element.key != null, Status.REACHABLE)
-        }
-
-        val finalList = knownWithPassword.map { kElement ->
-            val element = reachableWithPassword.find { rElement ->
-                kElement.network.ssid == rElement.network.ssid
-            }
-
-            if (element != null) {
-                element
-            } else {
-                kElement
-            }
-        }
-
-        if (connected != null) {
-            val element = stored.find{ sElement -> connected.ssid == sElement.ssid }
-            val connectedModel = WifiModel(if (element != null) element else connected, element != null && element.key != null, Status.CONNECTED)
-
-            val connectedInFinalList = finalList.find{ fElement -> fElement.network.ssid == connectedModel.network.ssid}
-
-            val trimList = if (connectedInFinalList != null) {
-                finalList - connectedInFinalList
-            } else {
-                finalList
-            }
-
-            trimList + connectedModel
-        }
+        val mergedList = mergeStoredAndDeviceWifiLists(known, reachable, connected, stored)
     }
+
 
     fun List<WifiNetwork>.exclude(other: List<WifiNetwork>) =
         this.filter { mine -> other.none { its -> its.ssid == mine.ssid } }
@@ -133,5 +93,35 @@ class MainActivity : AppCompatActivity() {
         val rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
         val msg = rawMsgs[0] as NdefMessage
         //content.text = String(msg.records[0].payload)
+    }
+
+    companion object {
+        fun mergeStoredAndDeviceWifiLists(known: List<WifiNetwork>, reachable: List<WifiNetwork>, connected: WifiNetwork?, stored: List<WifiNetwork>): List<WifiModel>{
+            val finalList = known.map { kElement ->
+                val element = stored.find { (ssid) ->
+                    kElement.ssid == ssid
+                }
+
+                WifiModel(element ?: kElement, element != null && element.key != null, Status.getReachable(reachable, kElement))
+            }
+
+            if (connected != null) {
+                val element = stored.find{ (ssid) -> connected.ssid == ssid }
+                val connectedModel = WifiModel(element ?: connected, element != null && element.key != null, Status.CONNECTED)
+
+                val connectedInFinalList = finalList.find{ (network) -> network.ssid == connectedModel.network.ssid}
+
+                val trimList = if (connectedInFinalList != null) {
+                    finalList.minus(connectedInFinalList)
+                } else {
+                    finalList
+                }
+
+                return trimList.plus(connectedModel)
+            } else {
+                return finalList
+            }
+
+        }
     }
 }

@@ -7,8 +7,16 @@ data class WifiModel(
 )
 
 enum class Status {
-    CONNECTED, REACHABLE, UNREACHABLE
+    CONNECTED, REACHABLE, UNREACHABLE;
+
+    companion object {
+        fun getReachable(reachable: List<WifiNetwork>, network:  WifiNetwork ): Status {
+           val optReachable = reachable.find { (ssid) -> ssid == network.ssid }
+            if(optReachable != null) return REACHABLE else return UNREACHABLE
+        }
+    }
 }
+
 
 data class WifiNetwork(
     val ssid: String,
