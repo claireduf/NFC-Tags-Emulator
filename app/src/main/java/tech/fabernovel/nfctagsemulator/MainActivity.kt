@@ -36,12 +36,51 @@ class MainActivity : AppCompatActivity() {
         val ndef = NfcUtils.generateNdefMessage(wifi)
         nfcAdapter?.setNdefPushMessage(ndef, this)
 
-        val wifis = listWifis()
-
         val stored = emptyList<WifiNetwork>()
-        val connected = wifis.third
-        val reachable = wifis.second.exclude(stored)
-        val known = wifis.first.exclude(stored)
+        val (known, reachable, connected) = listWifis()
+
+        val knownWithPassword = known.map { kElement ->
+            val element = stored.find { sElement ->
+                kElement.ssid == sElement.ssid
+            }
+
+            WifiModel(element ?: kElement, element != null && element.key != null, Status.UNREACHABLE)
+        }
+
+        val reachableWithPassword = reachable.map { rElement ->
+            val element = stored.find { sElement ->
+                rElement.ssid == sElement.ssid
+            }
+
+            WifiModel(element ?: rElement, element != null && element.key != null, Status.REACHABLE)
+        }
+
+        val finalList = knownWithPassword.map { kElement ->
+            val element = reachableWithPassword.find { rElement ->
+                kElement.network.ssid == rElement.network.ssid
+            }
+
+            if (element != null) {
+                element
+            } else {
+                kElement
+            }
+        }
+
+        if (connected != null) {
+            val element = stored.find{ sElement -> connected.ssid == sElement.ssid }
+            val connectedModel = WifiModel(if (element != null) element else connected, element != null && element.key != null, Status.CONNECTED)
+
+            val connectedInFinalList = finalList.find{ fElement -> fElement.network.ssid == connectedModel.network.ssid}
+
+            val trimList = if (connectedInFinalList != null) {
+                finalList - connectedInFinalList
+            } else {
+                finalList
+            }
+
+            trimList + connectedModel
+        }
     }
 
     fun List<WifiNetwork>.exclude(other: List<WifiNetwork>) =
