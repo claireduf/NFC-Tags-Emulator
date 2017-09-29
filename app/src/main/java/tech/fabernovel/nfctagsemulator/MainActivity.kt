@@ -72,6 +72,11 @@ class MainActivity : AppCompatActivity() {
             .check()
     }
 
+    override fun onResume() {
+        super.onResume()
+        refresh();
+    }
+
     private fun refresh() {
         val listWifis = listWifis()
         val finalList = getModels(listWifis)
@@ -90,7 +95,9 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.tag -> {
-                waitForTag(model.network)
+                withNfcEnabled {
+                    waitForTag(model.network)
+                }
                 true
             }
             else -> false
@@ -101,6 +108,24 @@ class MainActivity : AppCompatActivity() {
             popup.menu.findItem(R.id.tag).isVisible = true
         }
         popup.show()
+    }
+
+    private fun withNfcEnabled(f: () -> Unit) {
+        if (nfcAdapter?.isEnabled ?: false) {
+            f()
+        } else {
+            AlertDialog.Builder(this)
+                .setTitle("Activer le NFC")
+                .setMessage("Votre NFC semble désactivé. Veuillez l'activer.")
+                .setPositiveButton("Reglages") { _, _ ->
+                    startNfcSettingsActivity()
+                }
+                .show()
+        }
+    }
+
+    protected fun startNfcSettingsActivity() {
+        startActivity(Intent(android.provider.Settings.ACTION_NFC_SETTINGS))
     }
 
     private fun waitForTag(network: WifiNetwork) {
@@ -136,7 +161,9 @@ class MainActivity : AppCompatActivity() {
         when {
             model.missingPassword -> askForPassword(model.network)
             nfcAdapter == null -> showQrCode(model.network)
-            else -> beam(model.network)
+            else -> withNfcEnabled {
+                beam(model.network)
+            }
         }
     }
 
