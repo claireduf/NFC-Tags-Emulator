@@ -1,9 +1,20 @@
 package tech.fabernovel.nfctagsemulator
 
-/**
- * Created by Tarek Belkahia on 28/09/2017.
- */
-data class WifiNetwork(val ssid: String, val authType: AuthType, val key: String)
+data class WifiModel(
+    val network: WifiNetwork,
+    val missingPassword: Boolean,
+    val status: Status
+)
+
+enum class Status {
+    CONNECTED, REACHABLE, UNREACHABLE
+}
+
+data class WifiNetwork(
+    val ssid: String,
+    val authType: AuthType,
+    val key: String?
+)
 
 enum class AuthType {
     WPA_PSK,
