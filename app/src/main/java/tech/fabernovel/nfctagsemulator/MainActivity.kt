@@ -154,12 +154,12 @@ class MainActivity : AppCompatActivity() {
                     kElement.ssid == ssid
                 }
 
-                WifiModel(element ?: kElement, element != null && element.key != null, Status.getReachable(reachable, kElement))
+                WifiModel(element ?: kElement, element == null || element.key == null, Status.getReachable(reachable, kElement))
             }
 
             if (connected != null) {
                 val element = stored.find{ (ssid) -> connected.ssid == ssid }
-                val connectedModel = WifiModel(element ?: connected, element != null && element.key != null, Status.CONNECTED)
+                val connectedModel = WifiModel(element ?: connected, element == null || element.key == null, Status.CONNECTED)
 
                 val connectedInFinalList = finalList.find{ (network) -> network.ssid == connectedModel.network.ssid}
 

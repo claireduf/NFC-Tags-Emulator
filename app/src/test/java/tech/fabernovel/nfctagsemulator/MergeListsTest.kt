@@ -87,7 +87,9 @@ class MergeListsTest {
         Assert.assertTrue(mergedList.find { (network, _, status) -> status.equals(Status.REACHABLE) && network.ssid == "ssid2" } != null)
 
         //merged lists contains wifi models with passwords
-        Assert.assertTrue(mergedList.filter { wifi -> !wifi.missingPassword  }.size == 2)
+        val filtered = mergedList.filter { wifi -> !wifi.missingPassword }
+        println(filtered)
+        Assert.assertTrue(filtered.size == 2)
         Assert.assertTrue(mergedList.find { (network, missingPassword, _) -> !missingPassword} != null)
         Assert.assertTrue(mergedList.filter { (network, _, _) -> (network.key.equals("password1") || network.key.equals("password2")) }.size == 2)
     }
@@ -104,5 +106,11 @@ class MergeListsTest {
 
         Assert.assertTrue(mergedList.isNotEmpty())
         Assert.assertTrue(mergedList.size == 4)
+
+        //merged lists contains wifi models with passwords
+        println(mergedList)
+        val filtered = mergedList.filter { wifi -> wifi.missingPassword }
+        println(filtered.toString())
+        Assert.assertTrue(filtered.size == 4)
     }
 }
