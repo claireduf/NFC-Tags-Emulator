@@ -10,6 +10,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -28,7 +30,11 @@ class MainActivity : AppCompatActivity() {
         layoutManager = LinearLayoutManager(this)
         recycler.layoutManager = layoutManager
 
-        adapter = DefaultAdapter(emptyList())
+        adapter = DefaultAdapter({ v, m ->
+            Toast.makeText(this, "Cell $m", LENGTH_SHORT).show()
+        }, { v, m ->
+            Toast.makeText(this, "More $m", LENGTH_SHORT).show()
+        })
         recycler.adapter = adapter
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
@@ -36,15 +42,16 @@ class MainActivity : AppCompatActivity() {
         val ndef = NfcUtils.generateNdefMessage(wifi)
         nfcAdapter?.setNdefPushMessage(ndef, this)
 
-        val stored = emptyList<WifiNetwork>()
-        val (known, reachable, connected) = listWifis()
-
-        val mergedList = mergeStoredAndDeviceWifiLists(known, reachable, connected, stored)
+        val finalList = getModels(listWifis())
+        adapter.setData(finalList)
     }
 
+    private fun getModels(listWifis: Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?>): List<WifiModel> {
+        val stored = emptyList<WifiNetwork>()
+        val (known, reachable, connected) = listWifis
 
-    fun List<WifiNetwork>.exclude(other: List<WifiNetwork>) =
-        this.filter { mine -> other.none { its -> its.ssid == mine.ssid } }
+        return mergeStoredAndDeviceWifiLists(known, reachable, connected, stored)
+    }
 
     private fun listWifis(): Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?> {
         val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager

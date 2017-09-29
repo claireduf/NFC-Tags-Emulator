@@ -91,4 +91,18 @@ class MergeListsTest {
         Assert.assertTrue(mergedList.find { (network, missingPassword, _) -> !missingPassword} != null)
         Assert.assertTrue(mergedList.filter { (network, _, _) -> (network.key.equals("password1") || network.key.equals("password2")) }.size == 2)
     }
+
+    @Test
+    fun mergeListsStoredEmpty() {
+        val mergedList = MainActivity.mergeStoredAndDeviceWifiLists(
+                known,
+                reachable,
+                connected,
+                emptyList()
+        )
+
+
+        Assert.assertTrue(mergedList.isNotEmpty())
+        Assert.assertTrue(mergedList.size == 4)
+    }
 }
