@@ -16,6 +16,9 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.single.BasePermissionListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_wifi.view.*
 
@@ -36,16 +39,25 @@ class MainActivity : AppCompatActivity() {
         recycler.layoutManager = layoutManager
 
         adapter = DefaultAdapter(
-            { v, m -> handleWifi(m) },
+            { _, m -> handleWifi(m) },
             { v, m -> showMenu(v.more, m) })
         recycler.adapter = adapter
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
-        val listWifis = listWifis()
-        Log.d("###", listWifis.toString())
-        val finalList = getModels(listWifis)
-        adapter.setData(finalList)
+        Dexter
+            .withActivity(this)
+            .withPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+            .withListener(object : BasePermissionListener() {
+                override fun onPermissionGranted(response: PermissionGrantedResponse?) {
+                    val listWifis = listWifis()
+                    Log.d("###", "<" + listWifis.toString())
+                    val finalList = getModels(listWifis)
+                    Log.d("###", ">" + finalList.toString())
+                    adapter.setData(finalList)
+                }
+            })
+            .check()
     }
 
     private fun showMenu(anchor: View, model: WifiModel) {
@@ -121,7 +133,7 @@ class MainActivity : AppCompatActivity() {
         val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
         val reachable = wifiManager.scanResults
-        val listWifis = reachable.map {
+        val reachableWifis = reachable.map {
             val capabs = it.capabilities
             val authType = when {
                 capabs.contains("WPA") && capabs.contains("EAP") -> AuthType.WPA2_EAP
@@ -132,7 +144,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val list = wifiManager.configuredNetworks
-        val reachableWifis = list.map {
+        val listWifis = list.map {
             val keyManagement = it.allowedKeyManagement
             val authType = when {
                 keyManagement.get(WifiConfiguration.KeyMgmt.WPA_EAP) -> AuthType.WPA2_EAP
