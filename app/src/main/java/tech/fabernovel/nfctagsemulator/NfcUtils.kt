@@ -37,7 +37,7 @@ import android.net.wifi.WifiConfiguration.KeyMgmt.WPA_PSK
  * Utility class containing functions to read/write NFC tags with Wi-Fi configurations
  */
 object NfcUtils {
-    private val TAG = NfcUtils::class.java.simpleName
+    private val TAG = "NfcUtils"
 
     private val PACKAGE_NAME = BuildConfig.APPLICATION_ID
     val NFC_TOKEN_MIME_TYPE = "application/vnd.wfa.wsc"

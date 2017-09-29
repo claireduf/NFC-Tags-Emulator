@@ -26,7 +26,7 @@ class DefaultAdapter(
         val model = dataSet[position]
         val itemView = holder.itemView
         val context = itemView.context
-        itemView.title.text = model.network.ssid.replace("\"", "")
+        itemView.title.text = model.network.ssid
         populateTItle(itemView, model)
         populateIcon(itemView, model, context)
         itemView.setOnClickListener { cellListener(itemView, model) }

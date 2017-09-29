@@ -1,19 +1,27 @@
 package tech.fabernovel.nfctagsemulator
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
 import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Bundle
+import android.support.design.widget.TextInputLayout
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatEditText
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.PopupMenu
 import android.support.v7.widget.RecyclerView
+import android.text.InputType
+import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -30,6 +38,8 @@ class MainActivity : AppCompatActivity() {
     private var nfcAdapter: NfcAdapter? = null
     private lateinit var passwordPrefs: SharedPreferences
     private lateinit var authPrefs: SharedPreferences
+
+    private var tagDialog: AlertDialog? = null
 
     private lateinit var adapter: DefaultAdapter
     private lateinit var layoutManager: RecyclerView.LayoutManager
@@ -80,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.tag -> {
-                writeTag(model.network)
+                waitForTag(model.network)
                 true
             }
             else -> false
@@ -93,8 +103,33 @@ class MainActivity : AppCompatActivity() {
         popup.show()
     }
 
-    private fun writeTag(network: WifiNetwork) {
-        Toast.makeText(this, "writetag", LENGTH_SHORT).show()
+    private fun waitForTag(network: WifiNetwork) {
+        val nfcIntent = Intent(this, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        nfcIntent.putExtra("ssid", network.ssid)
+        val pi = PendingIntent.getActivity(this, 0, nfcIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val tagDetected = IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED)
+        nfcAdapter?.enableForegroundDispatch(this, pi, arrayOf(tagDetected), null)
+        tagDialog = AlertDialog.Builder(this)
+            .setTitle("Prêt à écrire le tag")
+            .setMessage("Approcher le tag afin d'écrire les informations du réseau ${network.ssid}")
+            .show()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action != NfcAdapter.ACTION_TAG_DISCOVERED) {
+            return
+        }
+        val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+        val ssid = intent.getStringExtra("ssid")
+
+        if (ssid != null) {
+            val writeTag = NfcUtils.writeTag(getWifi(ssid), tag)
+            if (writeTag) Toast.makeText(this, "Tag écrit", LENGTH_SHORT).show()
+            else Toast.makeText(this, "Erreur lors de l'écriture", LENGTH_SHORT).show()
+        }
+        tagDialog?.dismiss()
     }
 
     private fun handleWifi(model: WifiModel) {
@@ -120,6 +155,12 @@ class MainActivity : AppCompatActivity() {
     private fun askForPassword(model: WifiNetwork) {
         val editText = AppCompatEditText(this)
         editText.setText(model.key)
+        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        val inputLayout = TextInputLayout(this)
+        inputLayout.addView(editText)
+        inputLayout.isPasswordVisibilityToggleEnabled = true
+        val padding = resources.getDimensionPixelSize(R.dimen.padding)
+        inputLayout.setPadding(padding, 0, padding, 0)
         AlertDialog.Builder(this)
             .setTitle("Saisir le mot de passe")
             .setView(editText)
@@ -165,6 +206,9 @@ class MainActivity : AppCompatActivity() {
         passwordPrefs.edit().putString(network.ssid, key).apply()
     }
 
+    private fun getWifi(ssid: String): WifiNetwork =
+        WifiNetwork(ssid, AuthType.values()[authPrefs.getInt(ssid, 0)], passwordPrefs.getString(ssid, null))
+
     private fun listWifis(): Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?> {
         val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
@@ -176,7 +220,7 @@ class MainActivity : AppCompatActivity() {
                 capabs.contains("WPA") && capabs.contains("PSK") -> AuthType.WPA2_PSK
                 else -> AuthType.OPEN
             }
-            WifiNetwork(it.SSID, authType, null)
+            WifiNetwork(it.SSID.replace("\"",""), authType, null)
         }
 
         val list = wifiManager.configuredNetworks
@@ -187,12 +231,12 @@ class MainActivity : AppCompatActivity() {
                 keyManagement.get(WifiConfiguration.KeyMgmt.WPA_PSK) -> AuthType.WPA2_PSK
                 else -> AuthType.OPEN
             }
-            WifiNetwork(it.SSID, authType, null)
+            WifiNetwork(it.SSID.replace("\"",""), authType, null)
         }
 
         val wifiInfo = wifiManager.connectionInfo
 
-        return Triple(listWifis, reachableWifis, listWifis.find { it.ssid == wifiInfo.ssid })
+        return Triple(listWifis, reachableWifis, listWifis.find { it.ssid == wifiInfo.ssid.replace("\"","") })
     }
 
     companion object {
@@ -225,3 +269,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
+
