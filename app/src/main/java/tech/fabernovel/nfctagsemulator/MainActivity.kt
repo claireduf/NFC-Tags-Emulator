@@ -156,6 +156,7 @@ class MainActivity : AppCompatActivity() {
         val editText = AppCompatEditText(this)
         editText.setText(model.key)
         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        editText.setSelection(0, model.key?.length ?: 0)
         val inputLayout = TextInputLayout(this)
         inputLayout.addView(editText)
         inputLayout.isPasswordVisibilityToggleEnabled = true
@@ -163,7 +164,7 @@ class MainActivity : AppCompatActivity() {
         inputLayout.setPadding(padding, 0, padding, 0)
         AlertDialog.Builder(this)
             .setTitle("Saisir le mot de passe")
-            .setView(editText)
+            .setView(inputLayout)
             .setPositiveButton("Enregistrer") { _, _ ->
                 val key = if (editText.text.isEmpty()) null else editText.text.toString()
                 updateWifi(model, key)
