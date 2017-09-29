@@ -1,16 +1,17 @@
 package tech.fabernovel.nfctagsemulator
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
 import android.nfc.NfcAdapter
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.AppCompatEditText
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.PopupMenu
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
@@ -27,6 +28,8 @@ class MainActivity : AppCompatActivity() {
 
 
     private var nfcAdapter: NfcAdapter? = null
+    private lateinit var passwordPrefs: SharedPreferences
+    private lateinit var authPrefs: SharedPreferences
 
     private lateinit var adapter: DefaultAdapter
     private lateinit var layoutManager: RecyclerView.LayoutManager
@@ -34,6 +37,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        passwordPrefs = getSharedPreferences("wifi_passwords", Context.MODE_PRIVATE)
+        authPrefs = getSharedPreferences("wifi_auth", Context.MODE_PRIVATE)
 
         layoutManager = LinearLayoutManager(this)
         recycler.layoutManager = layoutManager
@@ -50,14 +56,16 @@ class MainActivity : AppCompatActivity() {
             .withPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
             .withListener(object : BasePermissionListener() {
                 override fun onPermissionGranted(response: PermissionGrantedResponse?) {
-                    val listWifis = listWifis()
-                    Log.d("###", "<" + listWifis.toString())
-                    val finalList = getModels(listWifis)
-                    Log.d("###", ">" + finalList.toString())
-                    adapter.setData(finalList)
+                    refresh()
                 }
             })
             .check()
+    }
+
+    private fun refresh() {
+        val listWifis = listWifis()
+        val finalList = getModels(listWifis)
+        adapter.setData(finalList)
     }
 
     private fun showMenu(anchor: View, model: WifiModel) {
@@ -110,7 +118,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun askForPassword(model: WifiNetwork) {
-        Toast.makeText(this, "password", LENGTH_SHORT).show()
+        val editText = AppCompatEditText(this)
+        editText.setText(model.key)
+        AlertDialog.Builder(this)
+            .setTitle("Saisir le mot de passe")
+            .setView(editText)
+            .setPositiveButton("Enregistrer") { _, _ ->
+                val key = if (editText.text.isEmpty()) null else editText.text.toString()
+                updateWifi(model, key)
+                refresh()
+            }
+            .setNegativeButton("Supprimer") { _, _ ->
+                deleteWifi(model)
+                refresh()
+            }
+            .show()
     }
 
     private fun beam(network: WifiNetwork) {
@@ -123,10 +145,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getModels(listWifis: Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?>): List<WifiModel> {
-        val stored = emptyList<WifiNetwork>()
+        val stored = getStoredWifis()
         val (known, reachable, connected) = listWifis
 
         return mergeStoredAndDeviceWifiLists(known, reachable, connected, stored)
+    }
+
+    private fun getStoredWifis(): List<WifiNetwork> {
+        return authPrefs.all.map { WifiNetwork(it.key, AuthType.values()[it.value as Int], passwordPrefs.getString(it.key, null)) }
+    }
+
+    private fun deleteWifi(network: WifiNetwork) {
+        authPrefs.edit().remove(network.ssid).apply()
+        passwordPrefs.edit().remove(network.ssid).apply()
+    }
+
+    private fun updateWifi(network: WifiNetwork, key: String?) {
+        authPrefs.edit().putInt(network.ssid, network.authType.ordinal).apply()
+        passwordPrefs.edit().putString(network.ssid, key).apply()
     }
 
     private fun listWifis(): Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?> {
@@ -156,7 +192,7 @@ class MainActivity : AppCompatActivity() {
 
         val wifiInfo = wifiManager.connectionInfo
 
-        return Triple(listWifis, reachableWifis, reachableWifis.find { it.ssid == wifiInfo.ssid })
+        return Triple(listWifis, reachableWifis, listWifis.find { it.ssid == wifiInfo.ssid })
     }
 
     companion object {
