@@ -2,46 +2,47 @@ package tech.fabernovel.nfctagsemulator
 
 import android.content.Context
 import android.content.Intent
+import android.net.wifi.WifiManager
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Bundle
-import android.os.Vibrator
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.activity_main.*
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.RecyclerView.Adapter
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
 
 
-    private lateinit var vibratorService: Vibrator
-    //private lateinit var nfcAdapter: NfcAdapter
+    private var nfcAdapter: NfcAdapter? = null
 
-    private lateinit var adapter: Adapter<DefaultAdapter.ViewHolder>
+    private lateinit var adapter: DefaultAdapter
     private lateinit var layoutManager: RecyclerView.LayoutManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        vibratorService = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        /*nfcAdapter = NfcAdapter.getDefaultAdapter(this)
-        val ndef = makeNdef()
-        nfcAdapter.setNdefPushMessage(ndef, this)*/
 
         layoutManager = LinearLayoutManager(this)
         recycler.layoutManager = layoutManager
 
-        adapter = DefaultAdapter(listOf("item 1", "item2", "item3"))
+        adapter = DefaultAdapter(emptyList())
         recycler.adapter = adapter
+
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        val wifi = WifiNetwork("Zen-Alien", AuthType.WPA2_PSK, "Alienwantswifi")
+        val ndef = NfcUtils.generateNdefMessage(wifi)
+        nfcAdapter?.setNdefPushMessage(ndef, this)
+
+        listWifis()
     }
 
-    private fun makeNdef(): NdefMessage {
-        return NfcUtils.generateNdefMessage(
-            WifiNetwork("Zen-Alien", AuthType.WPA2_PSK, "Alienwantswifi"))
+    private fun listWifis() {
+        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val list = wifiManager.configuredNetworks
+        adapter.dataSet  = list.map { it.SSID.replace("\"", "") }.toMutableList()
     }
-
 
     override fun onResume() {
         super.onResume()

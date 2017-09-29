@@ -6,7 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.item_wifi.view.*
 
-class DefaultAdapter(val dataSet: List<String>) : RecyclerView.Adapter<DefaultAdapter.ViewHolder>() {
+class DefaultAdapter(dataSet: List<String>) : RecyclerView.Adapter<DefaultAdapter.ViewHolder>() {
+
+    var dataSet = dataSet.toMutableList()
+    set(values) {
+        dataSet.clear()
+        dataSet.addAll(values)
+        notifyDataSetChanged()
+    }
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.itemView.textView.text = dataSet[position]
     }
