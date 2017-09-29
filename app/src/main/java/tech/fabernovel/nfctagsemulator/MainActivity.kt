@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -26,7 +28,11 @@ class MainActivity : AppCompatActivity() {
         layoutManager = LinearLayoutManager(this)
         recycler.layoutManager = layoutManager
 
-        adapter = DefaultAdapter(emptyList())
+        adapter = DefaultAdapter({ v, m ->
+            Toast.makeText(this, "Cell $m", LENGTH_SHORT).show()
+        }, { v, m ->
+            Toast.makeText(this, "More $m", LENGTH_SHORT).show()
+        })
         recycler.adapter = adapter
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
