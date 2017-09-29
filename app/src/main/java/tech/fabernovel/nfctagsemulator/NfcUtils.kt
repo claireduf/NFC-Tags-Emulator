@@ -243,7 +243,7 @@ object NfcUtils {
 
         buffer.putShort(NETWORK_KEY_FIELD_ID)
         buffer.putShort(networkKeySize ?: 0)
-        buffer.put(networkKey?.toByteArray())
+        buffer.put((networkKey ?: "").toByteArray())
 
         //        buffer.putShort(MAC_ADDRESS_FIELD_ID);
         //        buffer.putShort((short) MAX_MAC_ADDRESS_SIZE_BYTES);

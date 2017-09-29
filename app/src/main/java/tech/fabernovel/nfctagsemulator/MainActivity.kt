@@ -1,10 +1,8 @@
 package tech.fabernovel.nfctagsemulator
 
 import android.content.Context
-import android.content.Intent
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
-import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -12,6 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.PopupMenu
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
@@ -19,7 +18,6 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_wifi.view.*
-import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -44,7 +42,9 @@ class MainActivity : AppCompatActivity() {
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
-        val finalList = stubModels()//getModels(listWifis())
+        val listWifis = listWifis()
+        Log.d("###", listWifis.toString())
+        val finalList = getModels(listWifis)
         adapter.setData(finalList)
     }
 
@@ -110,14 +110,6 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun stubModels(): List<WifiModel> {
-        val random = Random()
-        return (0..5)
-            .map { "Mon super wifi $it" }
-            .map { WifiNetwork(it, AuthType.OPEN, "toto") }
-            .map { WifiModel(it, random.nextBoolean(), Status.values()[random.nextInt(3)]) }
-    }
-
     private fun getModels(listWifis: Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?>): List<WifiModel> {
         val stored = emptyList<WifiNetwork>()
         val (known, reachable, connected) = listWifis
@@ -153,25 +145,6 @@ class MainActivity : AppCompatActivity() {
         val wifiInfo = wifiManager.connectionInfo
 
         return Triple(listWifis, reachableWifis, reachableWifis.find { it.ssid == wifiInfo.ssid })
-    }
-
-    override fun onResume() {
-        super.onResume()
-        processIntent(intent)
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        processIntent(intent)
-    }
-
-    private fun processIntent(intent: Intent) {
-        if (NfcAdapter.ACTION_NDEF_DISCOVERED != intent.action) {
-            return
-        }
-        val rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
-        val msg = rawMsgs[0] as NdefMessage
-        //content.text = String(msg.records[0].payload)
     }
 
     companion object {
