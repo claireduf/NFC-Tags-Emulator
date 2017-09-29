@@ -7,12 +7,19 @@ import android.net.wifi.WifiManager
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.PopupMenu
 import android.support.v7.widget.RecyclerView
+import android.view.Gravity
+import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.item_wifi.view.*
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,20 +37,85 @@ class MainActivity : AppCompatActivity() {
         layoutManager = LinearLayoutManager(this)
         recycler.layoutManager = layoutManager
 
-        adapter = DefaultAdapter({ v, m ->
-            Toast.makeText(this, "Cell $m", LENGTH_SHORT).show()
-        }, { v, m ->
-            Toast.makeText(this, "More $m", LENGTH_SHORT).show()
-        })
+        adapter = DefaultAdapter(
+            { v, m -> handleWifi(m) },
+            { v, m -> showMenu(v.more, m) })
         recycler.adapter = adapter
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
-        val wifi = WifiNetwork("Zen-Alien", AuthType.WPA2_PSK, "Alienwantswifi")
-        val ndef = NfcUtils.generateNdefMessage(wifi)
-        nfcAdapter?.setNdefPushMessage(ndef, this)
 
-        val finalList = getModels(listWifis())
+        val finalList = stubModels()//getModels(listWifis())
         adapter.setData(finalList)
+    }
+
+    private fun showMenu(anchor: View, model: WifiModel) {
+        val popup = PopupMenu(this, anchor, Gravity.TOP or Gravity.END)
+        popup.setOnMenuItemClickListener { when (it.itemId) {
+            R.id.qrcode -> {
+                showQrCode(model.network)
+                true
+            }
+            R.id.edit -> {
+                askForPassword(model.network)
+                true
+            }
+            R.id.tag -> {
+                writeTag(model.network)
+                true
+            }
+            else -> false
+        } }
+        popup.inflate(R.menu.popup)
+        if (nfcAdapter != null) {
+            popup.menu.findItem(R.id.qrcode).isVisible = true
+            popup.menu.findItem(R.id.tag).isVisible = true
+        }
+        popup.show()
+    }
+
+    private fun writeTag(network: WifiNetwork) {
+        Toast.makeText(this, "writetag", LENGTH_SHORT).show()
+    }
+
+    private fun handleWifi(model: WifiModel) {
+        when {
+            model.missingPassword -> askForPassword(model.network)
+            nfcAdapter == null -> showQrCode(model.network)
+            else -> beam(model.network)
+        }
+    }
+
+    private fun showQrCode(network: WifiNetwork) {
+        val auth = if (network.authType == AuthType.OPEN) "" else "T:WPA;"
+        val wifi = "WIFI:${auth}S:${network.ssid};P:${network.key};;"
+        val bitmap = QRCodeGenerator.encodeAsBitmap(wifi)
+        val imageView = ImageView(this)
+        imageView.setImageBitmap(bitmap)
+        AlertDialog.Builder(this)
+            .setTitle("Prêt à scanner")
+            .setView(imageView)
+            .show()
+    }
+
+    private fun askForPassword(model: WifiNetwork) {
+        Toast.makeText(this, "password", LENGTH_SHORT).show()
+    }
+
+    private fun beam(network: WifiNetwork) {
+        val ndef = NfcUtils.generateNdefMessage(network)
+        nfcAdapter?.setNdefPushMessage(ndef, this)
+        AlertDialog.Builder(this)
+            .setTitle("Prêt à beamer")
+            .setMessage("Collez votre téléphone à celui du destinataire pour lui envoyer la configuration du réseau wifi ${network.ssid}")
+            .show()
+    }
+
+    private fun stubModels(): List<WifiModel> {
+        val random = Random()
+        return (0..5)
+            .map { "Mon super wifi $it" }
+            .map { WifiNetwork(it, AuthType.OPEN, "toto") }
+            .map { WifiModel(it, random.nextBoolean(), Status.values()[random.nextInt(3)]) }
     }
 
     private fun getModels(listWifis: Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?>): List<WifiModel> {

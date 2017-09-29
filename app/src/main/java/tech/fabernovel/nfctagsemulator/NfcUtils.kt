@@ -219,7 +219,7 @@ object NfcUtils {
 
         /* Fill buffer */
 
-        val bufferSize = 18 + ssidSize.toInt() + networkKeySize?.toInt()!! // size of required credential attributes
+        val bufferSize = 18 + ssidSize.toInt() + (networkKeySize?.toInt() ?: 0) // size of required credential attributes
 
         val buffer = ByteBuffer.allocate(bufferSize)
         buffer.putShort(CREDENTIAL_FIELD_ID)
@@ -242,8 +242,8 @@ object NfcUtils {
         //        buffer.putShort(ENC_TYPE_NONE); // FIXME
 
         buffer.putShort(NETWORK_KEY_FIELD_ID)
-        buffer.putShort(networkKeySize)
-        buffer.put(networkKey.toByteArray())
+        buffer.putShort(networkKeySize ?: 0)
+        buffer.put(networkKey?.toByteArray())
 
         //        buffer.putShort(MAC_ADDRESS_FIELD_ID);
         //        buffer.putShort((short) MAX_MAC_ADDRESS_SIZE_BYTES);
