@@ -1,10 +1,8 @@
 package tech.fabernovel.nfctagsemulator
 
 import android.content.Context
-import android.content.Intent
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
-import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -36,8 +34,13 @@ class MainActivity : AppCompatActivity() {
         val ndef = NfcUtils.generateNdefMessage(wifi)
         nfcAdapter?.setNdefPushMessage(ndef, this)
 
+        val finalList = getModels(listWifis())
+        adapter.setData(finalList)
+    }
+
+    private fun getModels(listWifis: Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?>): List<WifiModel> {
         val stored = emptyList<WifiNetwork>()
-        val (known, reachable, connected) = listWifis()
+        val (known, reachable, connected) = listWifis
 
         val knownWithPassword = known.map { kElement ->
             val element = stored.find { sElement ->
@@ -68,10 +71,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (connected != null) {
-            val element = stored.find{ sElement -> connected.ssid == sElement.ssid }
+            val element = stored.find { sElement -> connected.ssid == sElement.ssid }
             val connectedModel = WifiModel(if (element != null) element else connected, element != null && element.key != null, Status.CONNECTED)
 
-            val connectedInFinalList = finalList.find{ fElement -> fElement.network.ssid == connectedModel.network.ssid}
+            val connectedInFinalList = finalList.find { fElement -> fElement.network.ssid == connectedModel.network.ssid }
 
             val trimList = if (connectedInFinalList != null) {
                 finalList - connectedInFinalList
@@ -81,10 +84,8 @@ class MainActivity : AppCompatActivity() {
 
             trimList + connectedModel
         }
+        return finalList
     }
-
-    fun List<WifiNetwork>.exclude(other: List<WifiNetwork>) =
-        this.filter { mine -> other.none { its -> its.ssid == mine.ssid } }
 
     private fun listWifis(): Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?> {
         val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -114,24 +115,5 @@ class MainActivity : AppCompatActivity() {
         val wifiInfo = wifiManager.connectionInfo
 
         return Triple(listWifis, reachableWifis, reachableWifis.find { it.ssid == wifiInfo.ssid })
-    }
-
-    override fun onResume() {
-        super.onResume()
-        processIntent(intent)
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        processIntent(intent)
-    }
-
-    private fun processIntent(intent: Intent) {
-        if (NfcAdapter.ACTION_NDEF_DISCOVERED != intent.action) {
-            return
-        }
-        val rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
-        val msg = rawMsgs[0] as NdefMessage
-        //content.text = String(msg.records[0].payload)
     }
 }

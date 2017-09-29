@@ -210,16 +210,16 @@ object NfcUtils {
         }*/
 
         val networkKey = wifiNetwork.key
-        val networkKeySize = networkKey.toByteArray().size.toShort()
+        val networkKeySize = networkKey?.toByteArray()?.size?.toShort()
 
         val macAddress = ByteArray(MAX_MAC_ADDRESS_SIZE_BYTES)
-        for (i in 0..MAX_MAC_ADDRESS_SIZE_BYTES - 1) {
+        for (i in 0 until MAX_MAC_ADDRESS_SIZE_BYTES) {
             macAddress[i] = 0xff.toByte()
         }
 
         /* Fill buffer */
 
-        val bufferSize = 18 + ssidSize.toInt() + networkKeySize.toInt() // size of required credential attributes
+        val bufferSize = 18 + ssidSize.toInt() + networkKeySize?.toInt()!! // size of required credential attributes
 
         val buffer = ByteBuffer.allocate(bufferSize)
         buffer.putShort(CREDENTIAL_FIELD_ID)
@@ -307,7 +307,7 @@ object NfcUtils {
             }
             when (fieldId) {
                 SSID_FIELD_ID -> {
-                    val ssid = ByteArray(fieldSize)
+                    val ssid = ByteArray(fieldSize.toInt())
                     payload.get(ssid)
                     result.SSID = "\"" + String(ssid) + "\""
                 }
@@ -315,7 +315,7 @@ object NfcUtils {
                     if (fieldSize > MAX_NETWORK_KEY_SIZE_BYTES) {
                         return null
                     }
-                    val networkKey = ByteArray(fieldSize)
+                    val networkKey = ByteArray(fieldSize.toInt())
                     payload.get(networkKey)
                     result.preSharedKey = "\"" + String(networkKey) + "\""
                 }
