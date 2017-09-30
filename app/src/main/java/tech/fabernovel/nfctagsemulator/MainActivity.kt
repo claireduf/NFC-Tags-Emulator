@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        refresh();
+        refresh()
     }
 
     private fun refresh() {
@@ -111,13 +111,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun withNfcEnabled(f: () -> Unit) {
-        if (nfcAdapter?.isEnabled ?: false) {
+        if (nfcAdapter?.isEnabled == true) {
             f()
         } else {
             AlertDialog.Builder(this)
                 .setTitle("Activer le NFC")
                 .setMessage("Votre NFC semble désactivé. Veuillez l'activer.")
-                .setPositiveButton("Reglages") { _, _ ->
+                .setPositiveButton("Réglages") { _, _ ->
                     startNfcSettingsActivity()
                 }
                 .show()
