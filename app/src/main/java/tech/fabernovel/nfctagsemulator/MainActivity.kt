@@ -240,6 +240,11 @@ class MainActivity : AppCompatActivity() {
     private fun listWifis(): Triple<List<WifiNetwork>, List<WifiNetwork>, WifiNetwork?> {
         val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
+        if (wifiManager.isWifiEnabled() == false) {
+            Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled", Toast.LENGTH_LONG).show();
+            wifiManager.setWifiEnabled(true);
+        }
+
         val reachable = wifiManager.scanResults
         val reachableWifis = reachable.map {
             val capabs = it.capabilities
@@ -248,10 +253,11 @@ class MainActivity : AppCompatActivity() {
                 capabs.contains("WPA") && capabs.contains("PSK") -> AuthType.WPA2_PSK
                 else -> AuthType.OPEN
             }
-            WifiNetwork(it.SSID.replace("\"",""), authType, null)
+            WifiNetwork(it.SSID.replace("\"", ""), authType, null)
         }
 
         val list = wifiManager.configuredNetworks
+
         val listWifis = list.map {
             val keyManagement = it.allowedKeyManagement
             val authType = when {
@@ -259,12 +265,12 @@ class MainActivity : AppCompatActivity() {
                 keyManagement.get(WifiConfiguration.KeyMgmt.WPA_PSK) -> AuthType.WPA2_PSK
                 else -> AuthType.OPEN
             }
-            WifiNetwork(it.SSID.replace("\"",""), authType, null)
+            WifiNetwork(it.SSID.replace("\"", ""), authType, null)
         }
 
         val wifiInfo = wifiManager.connectionInfo
 
-        return Triple(listWifis, reachableWifis, listWifis.find { it.ssid == wifiInfo.ssid.replace("\"","") })
+        return Triple(listWifis, reachableWifis, listWifis&.find { it.ssid == wifiInfo.ssid.replace("\"","") })
     }
 
     companion object {
@@ -297,5 +303,3 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
-
-
