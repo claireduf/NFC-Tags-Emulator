@@ -270,7 +270,7 @@ class MainActivity : AppCompatActivity() {
 
         val wifiInfo = wifiManager.connectionInfo
 
-        return Triple(listWifis, reachableWifis, listWifis&.find { it.ssid == wifiInfo.ssid.replace("\"","") })
+        return Triple(listWifis, reachableWifis, listWifis.find { it.ssid == wifiInfo.ssid.replace("\"","") })
     }
 
     companion object {
