@@ -1,4 +1,4 @@
-package tech.fabernovel.nfctagsemulator
+package com.claireduf.sharewifi
 
 data class WifiModel(
     val network: WifiNetwork,

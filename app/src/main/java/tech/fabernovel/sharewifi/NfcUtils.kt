@@ -15,23 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package tech.fabernovel.nfctagsemulator
+package com.claireduf.sharewifi
 
 import android.net.wifi.WifiConfiguration
+import android.net.wifi.WifiConfiguration.KeyMgmt.WPA_EAP
+import android.net.wifi.WifiConfiguration.KeyMgmt.WPA_PSK
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
 import android.util.Log
-
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import java.util.BitSet
-
-import android.net.wifi.WifiConfiguration.KeyMgmt.WPA_EAP
-import android.net.wifi.WifiConfiguration.KeyMgmt.WPA_PSK
+import java.util.*
 
 /**
  * Utility class containing functions to read/write NFC tags with Wi-Fi configurations

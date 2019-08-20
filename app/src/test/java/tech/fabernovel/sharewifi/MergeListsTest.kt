@@ -1,4 +1,4 @@
-package tech.fabernovel.nfctagsemulator
+package com.claireduf.sharewifi
 
 import org.junit.Assert
 import org.junit.Test

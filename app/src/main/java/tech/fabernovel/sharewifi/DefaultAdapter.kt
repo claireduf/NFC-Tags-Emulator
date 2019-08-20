@@ -1,4 +1,4 @@
-package tech.fabernovel.nfctagsemulator
+package com.claireduf.sharewifi
 
 import android.content.Context
 import android.graphics.PorterDuff
@@ -8,10 +8,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.item_wifi.view.*
+import com.claireduf.sharewifi.WifiModel
 
 class DefaultAdapter(
-    private val cellListener: (cell: View, model: WifiModel) -> Unit,
-    private val moreListener: (cell: View, model: WifiModel) -> Unit
+        private val cellListener: (cell: View, model: WifiModel) -> Unit,
+        private val moreListener: (cell: View, model: WifiModel) -> Unit
 ) : RecyclerView.Adapter<DefaultAdapter.ViewHolder>() {
 
     private var dataSet = mutableListOf<WifiModel>()

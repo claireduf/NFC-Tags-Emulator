@@ -1,4 +1,4 @@
-package tech.fabernovel.nfctagsemulator
+package com.claireduf.sharewifi
 
 import android.graphics.Bitmap
 import com.google.zxing.BarcodeFormat

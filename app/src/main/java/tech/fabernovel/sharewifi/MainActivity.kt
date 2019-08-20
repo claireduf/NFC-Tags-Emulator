@@ -1,4 +1,4 @@
-package tech.fabernovel.nfctagsemulator
+package com.claireduf.sharewifi
 
 import android.app.PendingIntent
 import android.content.Context
@@ -23,6 +23,8 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
+import com.claireduf.sharewifi.DefaultAdapter
+import com.claireduf.sharewifi.R
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.single.BasePermissionListener
