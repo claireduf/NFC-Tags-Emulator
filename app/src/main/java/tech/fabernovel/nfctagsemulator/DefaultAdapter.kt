@@ -41,11 +41,11 @@ class DefaultAdapter(
                 Status.REACHABLE -> R.drawable.ic_network_wifi_white_24dp
                 Status.UNREACHABLE -> R.drawable.ic_signal_wifi_off_white_24dp
             })
-        itemView.icon.setColorFilter(ContextCompat.getColor(context,
+        itemView.icon.setColorFilter(ContextCompat.getColor(context!!,
             if (model.missingPassword) R.color.yellow
             else when (model.status) {
                 Status.CONNECTED -> R.color.green
-                Status.REACHABLE -> R.color.blue
+                Status.REACHABLE -> R.color.teal
                 Status.UNREACHABLE -> R.color.red
             }), PorterDuff.Mode.MULTIPLY)
     }

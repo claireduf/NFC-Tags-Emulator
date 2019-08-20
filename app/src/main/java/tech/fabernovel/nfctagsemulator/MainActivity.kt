@@ -18,10 +18,8 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.PopupMenu
 import android.support.v7.widget.RecyclerView
 import android.text.InputType
-import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -193,7 +191,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Saisir le mot de passe")
             .setView(inputLayout)
             .setPositiveButton("Enregistrer") { _, _ ->
-                val key = if (editText.text.isEmpty()) null else editText.text.toString()
+                val key = if (editText.text!!.isEmpty()) null else editText.text.toString()
                 updateWifi(model, key)
                 refresh()
             }
